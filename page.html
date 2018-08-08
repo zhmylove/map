@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+   <head>
+      <title>Map</title>
+      <meta charset="utf-8">
+      <link rel="stylesheet" type="text/css" href="page.css">
+      <script src="jquery-1.10.2.min.js"></script>
+      <script src="d3.v3.min.js"></script>
+      <script src="dndTree.js" ></script>
+   </head>
+   <body>
+      Node click action:
+      <select id="action_selector">
+         <option selected value="default">Default</option>
+         <option value="add">Add</option>
+         <option value="delete">Delete</option>
+         <option value="rename">Rename</option>
+      </select> 
+      Argument:
+      <input id="node_name" type="text" size="32" value="Value"></input>
+      <br>
+      Click to update represenation:
+      <textarea id="model" onClick="javascript:save_model()"></textarea>
+      Click to send:
+      <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
+      <div id="tree-container"></div>
+   </body>
+</html>
