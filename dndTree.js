@@ -29,6 +29,17 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 var LOAD_URL = "/test/map/get.php";
 var SAVE_URL = "/test/map/save.php";
 
+var PARENT_COLOR = "#00ff00";
+var NORMAL_COLOR = "#ffffff";
+var HIDDEN_COLOR = "#ff0000";
+
+var show_hidden = false;
+var real_root;
+
+function toggle_hidden() {
+   show_hidden = document.getElementById("show_hidden").checked;
+}
+
 // Get JSON data
 treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
@@ -276,20 +287,26 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // Helper functions for collapsing and expanding nodes.
 
-   function collapse(d) {
-      if (d.children) {
-         d._children = d.children;
-         d._children.forEach(collapse);
-         d.children = null;
-      }
-   }
-
+//   function collapse(d) {
+//      if (d.children) {
+//         d._children = d.children;
+//         d._children.forEach(collapse);
+//         d.children = null;
+//      }
+//   }
+//
    function expand(d) {
-      if (d._children) {
-         d.children = d._children;
-         d.children.forEach(expand);
-         d._children = null;
+      if (! d.children) {
+         d.children = [];
       }
+      d._children.forEach(function(el){
+         if (el.hide && show_hidden != true) {
+            return;
+         }
+         d.children.push(el);
+         d._children = get_arr_wo_child(d._children, el.id);
+      });
+      d.children.forEach(expand);
    }
 
    var overCircle = function(d) {
@@ -346,13 +363,42 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // Toggle children function
 
+   function get_arr_wo_child(arr, id) {
+      var new_children = arr.filter(function(el) {
+         return el.id != id;
+      });
+
+      return new_children;
+   }
+
+   function count_visible(arr) {
+      var count = 0;
+      arr.forEach(function(el){
+         if (typeof el.hide == "undefined" || el.hide != true){count++}
+      });
+      return count;
+   }
+
    function toggleChildren(d) {
-      if (d.children) {
-         d._children = d.children;
+      if (d.children) { // move all to _children
+         if (! d._children) {
+            d._children = [];
+         }
+         d.children.forEach(function(el){
+            d._children.push(el);
+         });
          d.children = null;
-      } else if (d._children) {
-         d.children = d._children;
-         d._children = null;
+      } else if (d._children) { // move unhidden from _children
+         if (! d.children) {
+            d.children = [];
+         }
+         d._children.forEach(function(el){
+            if (el.hide && show_hidden != true) {
+               return;
+            }
+            d.children.push(el);
+            d._children = get_arr_wo_child(d._children, el.id);
+         });
       }
       return d;
    }
@@ -377,6 +423,36 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
    function update_label_length() {
       totalNodes = 0;
       maxLabelLength = 0;
+
+      if (0 && real_root && real_root.name.length > 0) {
+         alert(1);
+         // TODO rewrite iter, fix
+         totalNodes = 1;
+         maxLabelLength = real_root.name.length;
+
+         var check_children = function(total, maxlen, arr) {
+            arr.forEach(function(el){
+               total++;
+               maxlen = Math.max(maxlen, el.name.length);
+               if (el.children) {
+                  check_children(total, maxlen, el.children);
+               }
+               if (el._children) {
+                  check_children(total, maxlen, el._children);
+               }
+            });
+         };
+         if (real_root.children) {
+            check_children(totalNodes, maxLabelLength, real_root.children);
+         }
+         if (real_root._children) {
+            check_children(totalNodes, maxLabelLength, real_root._children);
+         }
+         console.log("CHeckec");
+         console.log(totalNodes);
+
+         return;
+      }
 
       visit(treeData, function(d) {
          totalNodes++;
@@ -409,6 +485,28 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             d.name = $('#node_name').val();
             update_label_length();
             update(d);
+            break;
+         case 'unhide':
+            d.hide = false;
+            update_label_length();
+            update(d);
+            if (d.parent) {
+               update(d.parent);
+            }
+            break;
+         case 'hide':
+            if (! d.parent) {
+               break;
+            }
+            d.hide = true;
+            if (!d.parent._children) {
+               d.parent._children = [];
+            }
+            d.parent._children.push(d);
+            d.parent.children = get_arr_wo_child(d.parent.children, d.id);
+            update_label_length();
+            update(d);
+            update(d.parent);
             break;
          default:
             if (d3.event.defaultPrevented) return; // click suppressed
@@ -519,7 +617,13 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       node.select("circle.nodeCircle")
          .attr("r", 4.5)
          .style("fill", function(d) {
-            return d._children ? "lightsteelblue" : "#fff";
+            if (d._children && d._children.length > 0 && count_visible(d._children) > 0) {
+               return PARENT_COLOR;
+            } else if (typeof d.hide == "undefined" || d.hide != true) {
+               return NORMAL_COLOR;
+            } else { //hidden node
+               return HIDDEN_COLOR;
+            }
          });
 
       // Transition nodes to their new position.
@@ -608,71 +712,72 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
 });
 
-function copy_node(new_node, old_node) {
-   new_node.name = old_node.name;
+            function copy_node(new_node, old_node) {
+               new_node.name = old_node.name;
 
-   if (old_node.children) {
-      new_node.children = [];
-      var i = 0;
-      old_node.children.forEach( function(el){
-         new_node.children[i] = {};
-         copy_node(new_node.children[i++], el)
-      });
-   }
+               if (old_node.children) {
+                  new_node.children = [];
+                  var i = 0;
+                  old_node.children.forEach( function(el){
+                     new_node.children[i] = {};
+                     copy_node(new_node.children[i++], el)
+                  });
+               }
 
-   if (old_node._children) {
-      new_node._children = [];
-      var i = 0;
-      old_node._children.forEach( function(el){
-         new_node._children[i] = {};
-         copy_node(new_node._children[i++], el)
-      });
-   }
-}
+               if (old_node._children) {
+                  new_node._children = [];
+                  var i = 0;
+                  old_node._children.forEach( function(el){
+                     new_node._children[i] = {};
+                     copy_node(new_node._children[i++], el)
+                  });
+               }
+            }
 
-function save_model() {
-   var nodes = $.extend(true, [], d3.selectAll('g.node'));
-   var model = {};
-   var single_root;
+            function save_model() {
+               var nodes = $.extend(true, [], d3.selectAll('g.node'));
+               var model = {};
+               var single_root;
 
-   nodes.each(function(){
-      var node_data = d3.select(this).datum();
-      if (node_data.depth == 0) {
-         single_root = node_data;
-      }
-   });
+               nodes.each(function(){
+                  var node_data = d3.select(this).datum();
+                  if (node_data.depth == 0) {
+                     single_root = node_data;
+                     real_root = node_data;
+                  }
+               });
 
-   copy_node(model, single_root);
-   $('#model').val(JSON.stringify(model));
-}
+               copy_node(model, single_root);
+               $('#model').val(JSON.stringify(model));
+            }
 
-function prepare_metadata(d) {
-   if (d.children) {
-      d.children.forEach(prepare_metadata)
-   }
-   if (d._children) {
-      d._children.forEach(prepare_metadata)
-   }
-   delete d.depth;
-   delete d.id;
-   delete d.parent;
-   delete d.x;
-   delete d.x0;
-   delete d.y;
-   delete d.y0;
-   delete d.__proto__;
-}
+            function prepare_metadata(d) {
+               if (d.children) {
+                  d.children.forEach(prepare_metadata)
+               }
+               if (d._children) {
+                  d._children.forEach(prepare_metadata)
+               }
+               delete d.depth;
+               delete d.id;
+               delete d.parent;
+               delete d.x;
+               delete d.x0;
+               delete d.y;
+               delete d.y0;
+               delete d.__proto__;
+            }
 
-function prepare_for_send() {
-   save_model();
+            function prepare_for_send() {
+               save_model();
 
-   var value = $('#model').val();
-   var json = JSON.parse(value);
+               var value = $('#model').val();
+               var json = JSON.parse(value);
 
-   prepare_metadata(json);
+               prepare_metadata(json);
 
-   // Send
-   $.ajax({type: 'POST', url: SAVE_URL, dataType: 'json', data: JSON.stringify(json)});
+               // Send
+               $.ajax({type: 'POST', url: SAVE_URL, dataType: 'json', data: JSON.stringify(json)});
 
-   $('#prepare').val(JSON.stringify(json));
-}
+               $('#prepare').val(JSON.stringify(json));
+            }

@@ -15,6 +15,8 @@
          <option value="add">Add</option>
          <option value="delete">Delete</option>
          <option value="rename">Rename</option>
+         <option value="hide">Hide</option>
+         <option value="unhide">Unhide</option>
       </select> 
       Argument:
       <input id="node_name" type="text" size="32" value="Value"></input>
@@ -22,6 +24,7 @@
       <textarea id="model" style="display:none;" onClick="javascript:save_model()"></textarea>
       Click to send:
       <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
+      <input id="show_hidden" type="checkbox" onChange="javascript:toggle_hidden();"></input>
       <div id="tree-container"></div>
    </body>
 </html>
