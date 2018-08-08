@@ -623,7 +623,10 @@ function copy_node(new_node, old_node) {
    if (old_node._children) {
       new_node._children = [];
       var i = 0;
-      old_node._children.forEach( function(el){ copy_node(new_node._children[i++], el) });
+      old_node._children.forEach( function(el){
+         new_node._children[i] = {};
+         copy_node(new_node._children[i++], el)
+      });
    }
 }
 
