@@ -34,10 +34,46 @@ var NORMAL_COLOR = "#ffffff";
 var HIDDEN_COLOR = "#ff0000";
 
 var show_hidden = false;
+var maxLabelLength;
+var maxVisibleLabelLength;
+var maxAnyLabelLength;
 var real_root;
+var real_update;
+
+function collapse_all_hidden() {
+   var collapse_hidden = function(el){
+      if (el.children) {
+         el.children.forEach(function(d) {
+            collapse_hidden(d);
+            if (d.hide) {
+               el._children.push(d);
+               el.children = get_arr_wo_child(el.children, d.id);
+            }
+         });
+      }
+   };
+   collapse_hidden(real_root);
+}
+
+function update_all_nodes(node) {
+   if (node.children) {
+      node.children.forEach(update_all_nodes);
+   }
+   if (node._children) {
+      node._children.forEach(update_all_nodes);
+   }
+   real_update(node);
+}
+
+function collapse_all_hidden_update() {
+   collapse_all_hidden(real_root);
+   update_all_nodes(real_root);
+}
 
 function toggle_hidden() {
    show_hidden = document.getElementById("show_hidden").checked;
+   maxLabelLength = show_hidden ? maxAnyLabelLength : maxVisibleLabelLength;
+   collapse_all_hidden();
 }
 
 // Get JSON data
@@ -45,7 +81,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // Calculate total nodes, max label length
    var totalNodes = 0;
-   var maxLabelLength = 0;
+   maxLabelLength = 0;
+   maxVisibleLabelLength = 0;
+   maxAnyLabelLength = 0;
    // variables for drag/drop
    var selectedNode = null;
    var draggingNode = null;
@@ -287,28 +325,6 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // Helper functions for collapsing and expanding nodes.
 
-//   function collapse(d) {
-//      if (d.children) {
-//         d._children = d.children;
-//         d._children.forEach(collapse);
-//         d.children = null;
-//      }
-//   }
-//
-   function expand(d) {
-      if (! d.children) {
-         d.children = [];
-      }
-      d._children.forEach(function(el){
-         if (el.hide && show_hidden != true) {
-            return;
-         }
-         d.children.push(el);
-         d._children = get_arr_wo_child(d._children, el.id);
-      });
-      d.children.forEach(expand);
-   }
-
    var overCircle = function(d) {
       selectedNode = d;
       updateTempConnector();
@@ -361,95 +377,47 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       zoomListener.translate([x, y]);
    }
 
-   // Toggle children function
-
-   function get_arr_wo_child(arr, id) {
-      var new_children = arr.filter(function(el) {
-         return el.id != id;
-      });
-
-      return new_children;
-   }
-
-   function count_visible(arr) {
-      var count = 0;
-      arr.forEach(function(el){
-         if (typeof el.hide == "undefined" || el.hide != true){count++}
-      });
-      return count;
-   }
-
-   function toggleChildren(d) {
-      if (d.children) { // move all to _children
-         if (! d._children) {
-            d._children = [];
-         }
-         d.children.forEach(function(el){
-            d._children.push(el);
-         });
-         d.children = null;
-      } else if (d._children) { // move unhidden from _children
-         if (! d.children) {
-            d.children = [];
-         }
-         d._children.forEach(function(el){
-            if (el.hide && show_hidden != true) {
-               return;
-            }
-            d.children.push(el);
-            d._children = get_arr_wo_child(d._children, el.id);
-         });
-      }
-      return d;
-   }
-
-   // Toggle children on click.
-
-   function node_delete(d) {
-      var parent_node = d.parent;
-      if (d.children) {
-         d.children.forEach(node_delete);
-      }
-      if (parent_node) {
-         var new_children = parent_node.children.filter(function(el) {
-            return el.id != d.id;
-         });
-
-         delete parent_node.children;
-         parent_node.children = new_children;
-      }
-   }
-
    function update_label_length() {
       totalNodes = 0;
       maxLabelLength = 0;
 
-      if (0 && real_root && real_root.name.length > 0) {
-         alert(1);
-         // TODO rewrite iter, fix
+      if (real_root && real_root.name.length > 0) {
          totalNodes = 1;
          maxLabelLength = real_root.name.length;
+         
+         var total = totalNodes;
+         var maxlen = maxLabelLength;
+         var maxanylen = maxLabelLength;
 
-         var check_children = function(total, maxlen, arr) {
+         var check_children = function(arr) {
             arr.forEach(function(el){
                total++;
-               maxlen = Math.max(maxlen, el.name.length);
+               maxanylen = Math.max(maxanylen, el.name.length);
+
                if (el.children) {
-                  check_children(total, maxlen, el.children);
+                  check_children(el.children);
                }
-               if (el._children) {
-                  check_children(total, maxlen, el._children);
+
+               if (el.hide != true) {
+                  maxlen = Math.max(maxlen, el.name.length);
+
+                  if (el._children) {
+                     check_children(el._children);
+                  }
                }
             });
          };
          if (real_root.children) {
-            check_children(totalNodes, maxLabelLength, real_root.children);
+            check_children(real_root.children);
          }
          if (real_root._children) {
-            check_children(totalNodes, maxLabelLength, real_root._children);
+            check_children(real_root._children);
          }
-         console.log("CHeckec");
-         console.log(totalNodes);
+
+         totalNodes = total;
+         maxVisibleLabelLength = maxlen;
+         maxAnyLabelLength = maxanylen;
+         maxLabelLength = show_hidden ? maxanylen : maxlen;
 
          return;
       }
@@ -457,6 +425,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       visit(treeData, function(d) {
          totalNodes++;
          maxLabelLength = Math.max(d.name.length, maxLabelLength);
+
+         maxAnyLabelLength = maxLabelLength;
+         maxVisibleLabelLength = maxLabelLength;
 
       }, function(d) {
          return d.children && d.children.length > 0 ? d.children : null;
@@ -472,23 +443,19 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             }
 
             d.children.push( {name:$('#node_name').val()} );
-            update_label_length();
             update(d);
             break;
          case 'delete':
             var parent_node = d.parent;
             node_delete(d);
-            update_label_length();
             update(parent_node);
             break;
          case 'rename':
             d.name = $('#node_name').val();
-            update_label_length();
             update(d);
             break;
          case 'unhide':
             d.hide = false;
-            update_label_length();
             update(d);
             if (d.parent) {
                update(d.parent);
@@ -504,7 +471,6 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             }
             d.parent._children.push(d);
             d.parent.children = get_arr_wo_child(d.parent.children, d.id);
-            update_label_length();
             update(d);
             update(d.parent);
             break;
@@ -524,7 +490,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
       // This makes the layout more consistent.
       var levelWidth = [1];
+      update_label_length();
+
       var childCount = function(level, n) {
+
 
          if (n.children && n.children.length > 0) {
             if (levelWidth.length <= level + 1) levelWidth.push(0);
@@ -709,75 +678,164 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
    // Layout the tree initially and center on the root node.
    update(root);
    centerNode(root);
+   real_root = root;
+   real_update = update;
 
 });
 
-            function copy_node(new_node, old_node) {
-               new_node.name = old_node.name;
+function copy_node(new_node, old_node) {
+   new_node.name = old_node.name;
+   if (old_node.hide) {
+      new_node.hide = old_node.hide;
+   }
 
-               if (old_node.children) {
-                  new_node.children = [];
-                  var i = 0;
-                  old_node.children.forEach( function(el){
-                     new_node.children[i] = {};
-                     copy_node(new_node.children[i++], el)
-                  });
-               }
+   if (old_node.children) {
+      new_node.children = [];
+      var i = 0;
+      old_node.children.forEach( function(el){
+         new_node.children[i] = {};
+         copy_node(new_node.children[i++], el)
+      });
+   }
 
-               if (old_node._children) {
-                  new_node._children = [];
-                  var i = 0;
-                  old_node._children.forEach( function(el){
-                     new_node._children[i] = {};
-                     copy_node(new_node._children[i++], el)
-                  });
-               }
-            }
+   if (old_node._children) {
+      new_node._children = [];
+      var i = 0;
+      old_node._children.forEach( function(el){
+         new_node._children[i] = {};
+         copy_node(new_node._children[i++], el)
+      });
+   }
+}
 
-            function save_model() {
-               var nodes = $.extend(true, [], d3.selectAll('g.node'));
-               var model = {};
-               var single_root;
+function save_model() {
+   var nodes = $.extend(true, [], d3.selectAll('g.node'));
+   var model = {};
+   var single_root;
 
-               nodes.each(function(){
-                  var node_data = d3.select(this).datum();
-                  if (node_data.depth == 0) {
-                     single_root = node_data;
-                     real_root = node_data;
-                  }
-               });
+   nodes.each(function(){
+      var node_data = d3.select(this).datum();
+      if (node_data.depth == 0) {
+         single_root = node_data;
+         real_root = node_data;
+      }
+   });
 
-               copy_node(model, single_root);
-               $('#model').val(JSON.stringify(model));
-            }
+   copy_node(model, single_root);
+   $('#model').val(JSON.stringify(model));
+}
 
-            function prepare_metadata(d) {
-               if (d.children) {
-                  d.children.forEach(prepare_metadata)
-               }
-               if (d._children) {
-                  d._children.forEach(prepare_metadata)
-               }
-               delete d.depth;
-               delete d.id;
-               delete d.parent;
-               delete d.x;
-               delete d.x0;
-               delete d.y;
-               delete d.y0;
-               delete d.__proto__;
-            }
+function prepare_metadata(d) {
+   if (d.children) {
+      d.children.forEach(prepare_metadata)
+   }
+   if (d._children) {
+      d._children.forEach(prepare_metadata)
+   }
+   delete d.depth;
+   delete d.id;
+   delete d.parent;
+   delete d.x;
+   delete d.x0;
+   delete d.y;
+   delete d.y0;
+   delete d.__proto__;
+}
 
-            function prepare_for_send() {
-               save_model();
+function prepare_for_send() {
+   save_model();
 
-               var value = $('#model').val();
-               var json = JSON.parse(value);
+   var value = $('#model').val();
+   var json = JSON.parse(value);
 
-               prepare_metadata(json);
+   prepare_metadata(json);
 
-               // Send
-               $.ajax({type: 'POST', url: SAVE_URL, dataType: 'json', data: JSON.stringify(json)});
+   // Send
+   $.ajax({type: 'POST', url: SAVE_URL, dataType: 'json', data: JSON.stringify(json)});
 
-               $('#prepare').val(JSON.stringify(json));
-            }
+   $('#prepare').val(JSON.stringify(json));
+}
+
+function expand(d) {
+   if (! d.children) {
+      d.children = [];
+   }
+
+   if (! d._children) {
+      d._children = [];
+   }
+
+   d._children.forEach(function(el){
+      if (el.hide && show_hidden != true) {
+         return;
+      }
+      d.children.push(el);
+      d._children = get_arr_wo_child(d._children, el.id);
+   });
+
+   d.children.forEach(expand);
+   real_update(d);
+}
+
+function get_arr_wo_child(arr, id) {
+   var new_children = arr.filter(function(el) {
+      return el.id != id;
+   });
+
+   return new_children;
+}
+
+function count_visible(arr) {
+   var count = 0;
+
+   arr.forEach(function(el){
+      if (typeof el.hide == "undefined" || el.hide != true){count++}
+   });
+
+   return count;
+}
+
+function toggleChildren(d) {
+   if (d.children) { // move all to _children
+      if (! d._children) {
+         d._children = [];
+      }
+
+      d.children.forEach(function(el){
+         d._children.push(el);
+      });
+
+      d.children = null;
+   } else if (d._children) { // move unhidden from _children
+      if (! d.children) {
+         d.children = [];
+      }
+
+      d._children.forEach(function(el){
+         if (el.hide && show_hidden != true) {
+            return;
+         }
+         d.children.push(el);
+         d._children = get_arr_wo_child(d._children, el.id);
+      });
+   }
+   return d;
+}
+
+function node_delete(d) {
+   var parent_node = d.parent;
+
+   if (d.children) {
+      d.children.forEach(node_delete);
+   }
+
+   if (parent_node) {
+      var new_children = parent_node.children.filter(function(el) {
+         return el.id != d.id;
+      });
+
+      delete parent_node.children;
+      parent_node.children = new_children;
+   }
+}
+
