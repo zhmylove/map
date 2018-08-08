@@ -36,6 +36,7 @@ var NORMAL_COLOR = "#ffffff";
 var HIDDEN_COLOR = "#ff0000";
 
 var DEFAULT_WEIGHT = 1000;
+var WEIGHT_LENGTH_COMPENSATION = 5;
 
 // Internal variables
 var show_hidden = false;
@@ -78,6 +79,7 @@ function collapse_all_hidden_update() {
 function toggle_hidden() {
    show_hidden = document.getElementById("show_hidden").checked;
    maxLabelLength = show_hidden ? maxAnyLabelLength : maxVisibleLabelLength;
+   maxLabelLength = maxLabelLength + WEIGHT_LENGTH_COMPENSATION;
    collapse_all_hidden();
 }
 
@@ -446,9 +448,12 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          }
 
          totalNodes = total;
+
+         // + 5 due to weights
          maxVisibleLabelLength = maxlen;
          maxAnyLabelLength = maxanylen;
          maxLabelLength = show_hidden ? maxanylen : maxlen;
+         maxLabelLength = maxLabelLength + WEIGHT_LENGTH_COMPENSATION;
 
          return;
       }
@@ -463,6 +468,11 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       }, function(d) {
          return d.children && d.children.length > 0 ? d.children : null;
       });
+
+      maxAnyLabelLength = maxAnyLabelLength;
+      maxVisibleLabelLength = maxVisibleLabelLength;
+      maxLabelLength = show_hidden ? maxAnyLabelLength : maxVisibleLabelLength;
+      maxLabelLength = maxLabelLength + WEIGHT_LENGTH_COMPENSATION;
    }
 
    function click(d) {
