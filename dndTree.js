@@ -26,6 +26,8 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
+// User variables
+// Paths are not meaningful for server.py due to GET/POST difference
 var LOAD_URL = "/test/map/get.php";
 var SAVE_URL = "/test/map/save.php";
 
@@ -33,6 +35,9 @@ var PARENT_COLOR = "#00ff00";
 var NORMAL_COLOR = "#ffffff";
 var HIDDEN_COLOR = "#ff0000";
 
+var DEFAULT_WEIGHT = 1000;
+
+// Internal variables
 var show_hidden = false;
 var maxLabelLength;
 var maxVisibleLabelLength;
@@ -108,7 +113,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          return [d.y, d.x];
       });
 
-   // A recursive helper function for performing some setup by walking through all nodes
+   // A recursive helper function for performing some setup by
+   // walking through all nodes
 
    function visit(parent, visitFn, childrenFn) {
       if (!parent) return;
@@ -138,8 +144,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    function sortTree() {
       tree.sort(function(a, b) {
-         var a_weight = a.weight ? a.weight : 0;
-         var b_weight = b.weight ? b.weight : 0;
+         var a_weight = a.weight ? a.weight : DEFAULT_WEIGHT;
+         var b_weight = b.weight ? b.weight : DEFAULT_WEIGHT;
          return b_weight < a_weight ? 1 : -1;
          // return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
       });
@@ -155,17 +161,23 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          clearTimeout(panTimer);
          translateCoords = d3.transform(svgGroup.attr("transform"));
          if (direction == 'left' || direction == 'right') {
-            translateX = direction == 'left' ? translateCoords.translate[0] + speed : translateCoords.translate[0] - speed;
+            translateX = direction == 'left' ?
+               translateCoords.translate[0] + speed :
+               translateCoords.translate[0] - speed;
             translateY = translateCoords.translate[1];
          } else if (direction == 'up' || direction == 'down') {
             translateX = translateCoords.translate[0];
-            translateY = direction == 'up' ? translateCoords.translate[1] + speed : translateCoords.translate[1] - speed;
+            translateY = direction == 'up' ?
+               translateCoords.translate[1] + speed :
+               translateCoords.translate[1] - speed;
          }
          scaleX = translateCoords.scale[0];
          scaleY = translateCoords.scale[1];
          scale = zoomListener.scale();
-         svgGroup.transition().attr("transform", "translate(" + translateX + "," + translateY + ")scale(" + scale + ")");
-         d3.select(domNode).select('g.node').attr("transform", "translate(" + translateX + "," + translateY + ")");
+         svgGroup.transition().attr("transform", "translate(" +
+            translateX + "," + translateY + ")scale(" + scale + ")");
+         d3.select(domNode).select('g.node').attr("transform", "translate(" +
+            translateX + "," + translateY + ")");
          zoomListener.scale(zoomListener.scale());
          zoomListener.translate([translateX, translateY]);
          panTimer = setTimeout(function() {
@@ -177,12 +189,15 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
    // Define the zoom function for the zoomable tree
 
    function zoom() {
-      svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+      svgGroup.attr("transform", "translate(" + d3.event.translate +
+         ")scale(" + d3.event.scale + ")");
    }
 
 
-   // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
-   var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
+   // define the zoomListener which calls the zoom function on the
+   // "zoom" event constrained within the scaleExtents
+   var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3])
+      .on("zoom", zoom);
 
    function initiateDrag(d, domNode) {
       draggingNode = d;
@@ -190,8 +205,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       d3.selectAll('.ghostCircle').attr('class', 'ghostCircle show');
       d3.select(domNode).attr('class', 'node activeDrag');
 
-      svgGroup.selectAll("g.node").sort(function(a, b) { // select the parent and sort the path's
-         if (a.id != draggingNode.id) return 1; // a is not the hovered element, send "a" to the back
+      svgGroup.selectAll("g.node").sort(function(a, b) {
+         // select the parent and sort the path's
+         if (a.id != draggingNode.id) return 1;
+         // a is not the hovered element, send "a" to the back
          else return -1; // a is the hovered element, bring "a" to the front
       });
       // if nodes has children, remove the links and nodes
@@ -243,7 +260,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          dragStarted = true;
          nodes = tree.nodes(d);
          d3.event.sourceEvent.stopPropagation();
-         // it's important that we suppress the mouseover event on the node being dragged. Otherwise it will absorb the mouseover event and the underlying node will not detect it d3.select(this).attr('pointer-events', 'none');
+         // it's important that we suppress the mouseover event on the
+         // node being dragged. Otherwise it will absorb the mouseover event
+         // and the underlying node will not detect it d3.select(this).attr(
+         // 'pointer-events', 'none');
       })
       .on("drag", function(d) {
          if (d == root) {
@@ -254,7 +274,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             initiateDrag(d, domNode);
          }
 
-         // get coords of mouseEvent relative to svg container to allow for panning
+         // get coords of mouseEvent relative to svg container to allow
+         // for panning
          relCoords = d3.mouse($('svg').get(0));
          if (relCoords[0] < panBoundary) {
             panTimer = true;
@@ -288,12 +309,14 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          }
          domNode = this;
          if (selectedNode) {
-            // now remove the element from the parent, and insert it into the new elements children
+            // now remove the element from the parent, and insert it into the
+            // new elements children
             var index = draggingNode.parent.children.indexOf(draggingNode);
             if (index > -1) {
                draggingNode.parent.children.splice(index, 1);
             }
-            if (typeof selectedNode.children !== 'undefined' || typeof selectedNode._children !== 'undefined') {
+            if (typeof selectedNode.children !== 'undefined' ||
+               typeof selectedNode._children !== 'undefined') {
                if (typeof selectedNode.children !== 'undefined') {
                   selectedNode.children.push(draggingNode);
                } else {
@@ -303,7 +326,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
                selectedNode.children = [];
                selectedNode.children.push(draggingNode);
             }
-            // Make sure that the node being added to is expanded so user can see added node is correctly moved
+            // Make sure that the node being added to is expanded so user can
+            // see added node is correctly moved
             expand(selectedNode);
             sortTree();
             endDrag();
@@ -337,11 +361,13 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       updateTempConnector();
    };
 
-   // Function to update the temporary connector indicating dragging affiliation
+   // Function to update the temporary connector
+   // indicating dragging affiliation
    var updateTempConnector = function() {
       var data = [];
       if (draggingNode !== null && selectedNode !== null) {
-         // have to flip the source coordinates since we did this for the existing connectors on the original tree
+         // have to flip the source coordinates since we did this for the
+         // existing connectors on the original tree
          data = [{
             source: {
                x: selectedNode.y0,
@@ -365,7 +391,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       link.exit().remove();
    };
 
-   // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
+   // Function to center node when clicked/dropped so node doesn't get lost
+   // when collapsing/moving with large amount of children.
 
    function centerNode(source) {
       scale = zoomListener.scale();
@@ -375,7 +402,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       y = y * scale + viewerHeight / 2;
       d3.select('g').transition()
          .duration(duration)
-         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
+         .attr("transform", "translate(" + x + "," + y + ")scale(" +
+            scale + ")");
       zoomListener.scale(scale);
       zoomListener.translate([x, y]);
    }
@@ -481,9 +509,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             var new_weight = window.prompt("New weight:", d.weight);
             if (new_weight != null && Number(new_weight) == new_weight) {
                d.weight = Number(new_weight);
+            } else {
+               delete d.weight;
             }
-            console.log(new_weight);
-            console.log(d.weight);
             update(d);
             break;
          default:
@@ -498,8 +526,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
    }
 
    function update(source) {
-      // Compute the new height, function counts total children of root node and sets tree height accordingly.
-      // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
+      // Compute the new height, function counts total children of root node
+      // and sets tree height accordingly.
+      // This prevents the layout looking squashed when new nodes are made
+      // visible or looking sparse when nodes are removed
       // This makes the layout more consistent.
       var levelWidth = [1];
       update_label_length();
@@ -527,7 +557,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       // Set widths between levels based on maxLabelLength.
       nodes.forEach(function(d) {
          d.y = (d.depth * (maxLabelLength * 10)); //maxLabelLength * 10px
-         // alternatively to keep a fixed scale one can set a fixed depth per level
+         // alternatively to keep a fixed scale one can set a fixed depth per
+         // level
          // Normalize for fixed-depth by commenting out below line
          // d.y = (d.depth * 500); //500px per level.
       });
@@ -597,11 +628,13 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             return d.name;
          });
 
-      // Change the circle fill depending on whether it has children and is collapsed
+      // Change the circle fill depending on whether it has children and is
+      // collapsed
       node.select("circle.nodeCircle")
          .attr("r", 4.5)
          .style("fill", function(d) {
-            if (d._children && d._children.length > 0 && count_visible(d._children) > 0) {
+            if (d._children && d._children.length > 0 &&
+               count_visible(d._children) > 0) {
                return PARENT_COLOR;
             } else if (typeof d.hide == "undefined" || d.hide != true) {
                return NORMAL_COLOR;
@@ -682,7 +715,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       });
    }
 
-   // Append a group which holds all nodes and which the zoom Listener can act upon.
+   // Append a group which holds all nodes and which the zoom Listener can
+   // act upon.
    var svgGroup = baseSvg.append("g");
 
    // Define the root
@@ -702,7 +736,9 @@ function copy_node(new_node, old_node) {
    new_node.name = old_node.name;
    if (old_node.hide) { new_node.hide = old_node.hide }
 
-   if (old_node.weight && old_node.weight != 0) { new_node.weight = old_node.weight }
+   if (old_node.weight && old_node.weight != 0) {
+      new_node.weight = old_node.weight
+   }
 
    if (old_node.children) {
       new_node.children = [];
@@ -766,7 +802,10 @@ function prepare_for_send() {
    prepare_metadata(json);
 
    // Send
-   $.ajax({type: 'POST', url: SAVE_URL, dataType: 'json', data: JSON.stringify(json)});
+   $.ajax({
+      type: 'POST', url: SAVE_URL, dataType: 'json',
+      data: JSON.stringify(json)
+   });
 
    $('#prepare').val(JSON.stringify(json));
 }
