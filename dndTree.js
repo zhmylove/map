@@ -138,7 +138,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    function sortTree() {
       tree.sort(function(a, b) {
-         return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
+         var a_weight = a.weight ? a.weight : 0;
+         var b_weight = b.weight ? b.weight : 0;
+         return b_weight < a_weight ? 1 : -1;
+         // return b.name.toLowerCase() < a.name.toLowerCase() ? 1 : -1;
       });
    }
    // Sort the tree initially incase the JSON isn't in a sorted order.
@@ -474,6 +477,15 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             update(d);
             update(d.parent);
             break;
+         case 'change_weight':
+            var new_weight = window.prompt("New weight:", d.weight);
+            if (new_weight != null && Number(new_weight) == new_weight) {
+               d.weight = Number(new_weight);
+            }
+            console.log(new_weight);
+            console.log(d.weight);
+            update(d);
+            break;
          default:
             if (d3.event.defaultPrevented) return; // click suppressed
             d = toggleChildren(d);
@@ -579,6 +591,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             return d.children || d._children ? "end" : "start";
          })
          .text(function(d) {
+            if (d.weight) {
+               return "[" + d.weight + "] " + d.name;
+            }
             return d.name;
          });
 
@@ -685,9 +700,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
 function copy_node(new_node, old_node) {
    new_node.name = old_node.name;
-   if (old_node.hide) {
-      new_node.hide = old_node.hide;
-   }
+   if (old_node.hide) { new_node.hide = old_node.hide }
+
+   if (old_node.weight && old_node.weight != 0) { new_node.weight = old_node.weight }
 
    if (old_node.children) {
       new_node.children = [];

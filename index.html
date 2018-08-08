@@ -17,17 +17,19 @@
          <option value="rename">Rename</option>
          <option value="hide">Hide</option>
          <option value="unhide">Unhide</option>
+         <option value="change_weight">Change weight</option>
       </select> 
       Argument:
       <input id="node_name" type="text" size="32" value="Value"></input>
-      <br>
       <textarea id="model" style="display:none;" onClick="javascript:save_model()"></textarea>
-      Click to send:
-      <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
       Show hidden:
       <input id="show_hidden" type="checkbox" onChange="javascript:toggle_hidden();"></input>
       <input type="button" value="Expand all" onClick="javascript:expand(real_root);"></input>
       <input type="button" value="Collapse all hidden" onClick="javascript:collapse_all_hidden_update();"></input>
+
+      <br>
+      Click to send:
+      <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
       <div id="tree-container"></div>
    </body>
 </html>
