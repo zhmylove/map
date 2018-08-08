@@ -1,0 +1,4 @@
+Implement entries[] for each node
+Implement visible property for each node
+Dynamically copy visible nodes to children or _children
+Implement visible counters in node names (?) / color (?)

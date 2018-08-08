@@ -26,8 +26,8 @@ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
-var LOAD_URL = "/test/get.php";
-var SAVE_URL = "/test/save.php";
+var LOAD_URL = "/test/map/get.php";
+var SAVE_URL = "/test/map/save.php";
 
 // Get JSON data
 treeJSON = d3.json(LOAD_URL, function(error, treeData) {
@@ -661,6 +661,8 @@ function prepare_metadata(d) {
 }
 
 function prepare_for_send() {
+   save_model();
+
    var value = $('#model').val();
    var json = JSON.parse(value);
 
