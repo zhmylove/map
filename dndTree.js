@@ -476,7 +476,25 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
                d.children = [];
             }
 
-            d.children.push( {name:$('#node_name').val()} );
+            if ($('#node_name').val().length > 0) {
+               var new_node = {};
+               new_node.name = $('#node_name').val();
+
+               var new_weight = $('#node_weight').val();
+               if (new_weight != null && Number(new_weight) == new_weight) {
+                  new_node.weight = Number(new_weight);
+               }
+
+               d.children.push( new_node );
+
+               $('#node_name').val('');
+               $('#node_weight').val('');
+            } else {
+               var new_name = window.prompt("New name:", '');
+               if (new_name != null && new_name.length > 0) {
+                  d.children.push( {name:new_name} );
+               }
+            }
             update(d);
             break;
          case 'delete':
@@ -485,7 +503,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             update(parent_node);
             break;
          case 'rename':
-            d.name = $('#node_name').val();
+            var new_name = window.prompt("New name:", d.name);
+            if (new_name != null && new_name.length > 0) {
+               d.name = new_name;
+            }
             update(d);
             break;
          case 'unhide':
