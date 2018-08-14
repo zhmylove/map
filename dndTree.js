@@ -1,5 +1,6 @@
 /*Copyright (c) 2013-2016, Rob Schmuecker
  * Slightly improved functionality 2018, KorG
+ * vim: cc=79 et sw=3 ts=3 :
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -433,23 +434,15 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
                if (el.hide != true) {
                   maxlen = Math.max(maxlen, el.name.length);
-
-                  if (el._children) {
-                     check_children(el._children);
-                  }
                }
             });
          };
          if (real_root.children) {
             check_children(real_root.children);
          }
-         if (real_root._children) {
-            check_children(real_root._children);
-         }
 
          totalNodes = total;
 
-         // + 5 due to weights
          maxVisibleLabelLength = maxlen;
          maxAnyLabelLength = maxanylen;
          maxLabelLength = show_hidden ? maxanylen : maxlen;
@@ -566,7 +559,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
       // Set widths between levels based on maxLabelLength.
       nodes.forEach(function(d) {
-         d.y = (d.depth * (maxLabelLength * 10)); //maxLabelLength * 10px
+         d.y = (d.depth * (maxLabelLength * 6)); //maxLabelLength * 10px
          // alternatively to keep a fixed scale one can set a fixed depth per
          // level
          // Normalize for fixed-depth by commenting out below line
@@ -597,12 +590,12 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
       nodeEnter.append("text")
          .attr("x", function(d) {
-            return d.children || d._children ? -10 : 10;
+            return 10;
          })
          .attr("dy", ".35em")
          .attr('class', 'nodeText')
          .attr("text-anchor", function(d) {
-            return d.children || d._children ? "end" : "start";
+            return "start"
          })
          .text(function(d) {
             return d.name;
@@ -626,10 +619,10 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       // Update the text to reflect whether node has children or not.
       node.select('text')
          .attr("x", function(d) {
-            return d.children || d._children ? -10 : 10;
+            return 10;
          })
          .attr("text-anchor", function(d) {
-            return d.children || d._children ? "end" : "start";
+            return "start"
          })
          .text(function(d) {
             if (d.weight) {
@@ -750,7 +743,7 @@ function copy_node(new_node, old_node) {
       new_node.weight = old_node.weight
    }
 
-   if (old_node.children) {
+   if (old_node.children && old_node.children.length > 0) {
       new_node.children = [];
       var i = 0;
       old_node.children.forEach( function(el){
@@ -759,7 +752,7 @@ function copy_node(new_node, old_node) {
       });
    }
 
-   if (old_node._children) {
+   if (old_node._children && old_node._children.length > 0) {
       new_node._children = [];
       var i = 0;
       old_node._children.forEach( function(el){
