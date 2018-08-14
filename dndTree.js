@@ -416,6 +416,18 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
       zoomListener.translate([x, y]);
    }
 
+   function centerView() {
+      scale = zoomListener.scale();
+      x = $(document).width() * 0.1;
+      y = viewerHeight / 2;
+      d3.select('g').transition()
+         .duration(duration)
+         .attr("transform", "translate(" + x + "," + y + ")scale(" +
+            scale + ")");
+      zoomListener.scale(scale);
+      zoomListener.translate([x, y]);
+   }
+
    function update_label_length() {
       totalNodes = 0;
       maxLabelLength = 0;
@@ -755,7 +767,8 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // Layout the tree initially and center on the root node.
    update(root);
-   centerNode(root);
+   //centerNode(root);
+   centerView();
    real_root = root;
    real_update = update;
 
