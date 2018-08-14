@@ -41,7 +41,7 @@ var WEIGHT_LENGTH_COMPENSATION = 5;
 
 // Internal variables
 var show_hidden = false;
-var lock_drag = false;
+var lock_drag = true;
 var maxLabelLength;
 var maxVisibleLabelLength;
 var maxAnyLabelLength;
@@ -597,7 +597,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
       // Set widths between levels based on maxLabelLength.
       nodes.forEach(function(d) {
-         d.y = (d.depth * (maxLabelLength * 6)); //maxLabelLength * 10px
+         d.y = (d.depth * (maxLabelLength * 7)); //maxLabelLength * 10px
          // alternatively to keep a fixed scale one can set a fixed depth per
          // level
          // Normalize for fixed-depth by commenting out below line
@@ -956,10 +956,9 @@ function down() {
 }
 
 function loaded() {
-   console.log(1);
    $("#node_name").val('');
    $("#node_weight").val('');
    $("#model").val('');
-   $("#show_hidden").prop('checked', false);
-   $("#lock_drag").prop('checked', false);
+   $("#show_hidden").prop('checked', show_hidden);
+   $("#lock_drag").prop('checked', lock_drag);
 }
