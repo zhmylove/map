@@ -9,31 +9,33 @@
       <script src="dndTree.js" ></script>
    </head>
    <body>
-      Node click action:
-      <select id="action_selector">
-         <option selected value="default">Default</option>
-         <option value="add">Add</option>
-         <option value="delete">Delete</option>
-         <option value="rename">Rename</option>
-         <option value="hide">Hide</option>
-         <option value="unhide">Unhide</option>
-         <option value="change_weight">Change weight</option>
-      </select> 
-      Name:
-      <input id="node_name" type="text" size="32" value=""></input>
-      Weight:
-      <input id="node_weight" type="text" size="4" value=""></input>
-      <textarea id="model" style="display:none;" onClick="javascript:save_model()"></textarea>
-      Show hidden:
-      <input id="show_hidden" type="checkbox" onChange="javascript:toggle_hidden();"></input>
-      <input type="button" value="Expand all" onClick="javascript:expand(real_root);"></input>
-      <input type="button" value="Collapse all hidden" onClick="javascript:collapse_all_hidden_update();"></input>
-      Lock drag:
-      <input id="lock_drag" type="checkbox" onChange="javascript:toggle_lock_drag();"></input>
+      <div id='ctrl_wrapper'>
+         Node click action:
+         <select id="action_selector">
+            <option selected value="default">Default</option>
+            <option value="add">Add</option>
+            <option value="delete">Delete</option>
+            <option value="rename">Rename</option>
+            <option value="hide">Hide</option>
+            <option value="unhide">Unhide</option>
+            <option value="change_weight">Change weight</option>
+         </select> 
+         Name:
+         <input id="node_name" type="text" size="32" value=""></input>
+         Weight:
+         <input id="node_weight" type="text" size="4" value=""></input>
+         <textarea id="model" style="display:none;" onClick="javascript:save_model()"></textarea>
+         Show hidden:
+         <input id="show_hidden" type="checkbox" onChange="javascript:toggle_hidden();"></input>
+         <input type="button" value="Expand all" onClick="javascript:expand(real_root);"></input>
+         <input type="button" value="Collapse all hidden" onClick="javascript:collapse_all_hidden_update();"></input>
+         Lock drag:
+         <input id="lock_drag" type="checkbox" onChange="javascript:toggle_lock_drag();"></input>
 
-      <br>
-      Click to send:
-      <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
+         <br>
+         Click to send:
+         <textarea id="prepare" onClick="javascript:prepare_for_send()"></textarea>
+      </div>
       <div id="tree-container"></div>
    </body>
 </html>
