@@ -41,6 +41,7 @@ var WEIGHT_LENGTH_COMPENSATION = 5;
 
 // Internal variables
 var show_hidden = false;
+var lock_drag = false;
 var maxLabelLength;
 var maxVisibleLabelLength;
 var maxAnyLabelLength;
@@ -75,6 +76,10 @@ function update_all_nodes(node) {
 function collapse_all_hidden_update() {
    collapse_all_hidden(real_root);
    update_all_nodes(real_root);
+}
+
+function toggle_lock_drag() {
+   lock_drag = document.getElementById("lock_drag").checked;
 }
 
 function toggle_hidden() {
@@ -257,7 +262,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
    // Define the drag listeners for drag/drop behaviour of nodes.
    dragListener = d3.behavior.drag()
       .on("dragstart", function(d) {
-         if (d == root) {
+         if (lock_drag || d == root) {
             return;
          }
          dragStarted = true;
@@ -269,7 +274,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          // 'pointer-events', 'none');
       })
       .on("drag", function(d) {
-         if (d == root) {
+         if (lock_drag || d == root) {
             return;
          }
          if (dragStarted) {
@@ -307,7 +312,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
          node.attr("transform", "translate(" + d.y0 + "," + d.x0 + ")");
          updateTempConnector();
       }).on("dragend", function(d) {
-         if (d == root) {
+         if (lock_drag || d == root) {
             return;
          }
          domNode = this;
