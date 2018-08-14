@@ -110,7 +110,7 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
 
    // size of the diagram
    var viewerWidth = $(document).width() - 2;
-   var viewerHeight = $(document).height() - $('#ctrl_wrapper').height() - 4;
+   var viewerHeight = $(document).height() - 4;
 
    var tree = d3.layout.tree()
       .size([viewerHeight, viewerWidth]);
@@ -953,4 +953,13 @@ function down() {
    save_model();
    var value = $('#model').val();
    download("map.db", value);
+}
+
+function loaded() {
+   console.log(1);
+   $("#node_name").val('');
+   $("#node_weight").val('');
+   $("#model").val('');
+   $("#show_hidden").prop('checked', false);
+   $("#lock_drag").prop('checked', false);
 }

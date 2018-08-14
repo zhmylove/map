@@ -41,3 +41,29 @@ body {
    margin: 0;
    padding: 0;
 }
+
+#ctrl_wrapper {
+   width: 350px;
+   display: block;
+   position: fixed;
+   right: 10px;
+   top: 10px;
+   padding: 10px;
+   background-color: lightgrey;
+}
+
+#ctrl_wrapper #action_selector {
+   width: 286px;
+}
+
+#ctrl_wrapper #node_name {
+   width: 274px;
+}
+
+#ctrl_wrapper #node_weight {
+   width: 263px;
+}
+
+#ctrl_wrapper .button {
+   padding: 0;
+}

@@ -8,9 +8,9 @@
       <script src="d3.v3.min.js"></script>
       <script src="dndTree.js" ></script>
    </head>
-   <body>
+   <body onLoad="javascript:loaded();">
       <div id='ctrl_wrapper'>
-         Node click action:
+         Action:
          <select id="action_selector">
             <option selected value="default">Default</option>
             <option value="add">Add</option>
@@ -20,22 +20,26 @@
             <option value="unhide">Unhide</option>
             <option value="change_weight">Change weight</option>
          </select> 
+
          Name:
          <input id="node_name" type="text" size="32" value=""></input>
+
          Weight:
          <input id="node_weight" type="text" size="4" value=""></input>
          <textarea id="model" style="display:none;" onClick="javascript:save_model()"></textarea>
+
          Show hidden:
          <input id="show_hidden" type="checkbox" onChange="javascript:toggle_hidden();"></input>
-         <input type="button" value="Expand all" onClick="javascript:expand(real_root);"></input>
-         <input type="button" value="Collapse all hidden" onClick="javascript:collapse_all_hidden_update();"></input>
+
          Lock drag:
          <input id="lock_drag" type="checkbox" onChange="javascript:toggle_lock_drag();"></input>
+         <input type="button" class="button" value="Expand all" onClick="javascript:expand(real_root);"></input>
+         <input type="button" class="button" value="Collapse hidden" onClick="javascript:collapse_all_hidden_update();"></input>
+         <input type="button" class="button" value="Download" onClick="javascript:down();"></input>
 
          <br>
          Click to send:
          <textarea id="prepare" onClick="javascript:prepare_and_send();"></textarea>
-         <input type="button" value="Download" onClick="javascript:down();"></input>
       </div>
       <div id="tree-container"></div>
    </body>
