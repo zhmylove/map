@@ -835,7 +835,7 @@ function prepare_metadata(d) {
    delete d.__proto__;
 }
 
-function prepare_for_send() {
+function prepare_and_send() {
    save_model();
 
    var value = $('#model').val();
@@ -935,3 +935,22 @@ function node_delete(d) {
    }
 }
 
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' +
+       encodeURIComponent(text));
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+}
+
+function down() {
+   save_model();
+   var value = $('#model').val();
+   download("map.db", value);
+}
