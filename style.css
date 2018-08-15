@@ -67,3 +67,33 @@ body {
 #ctrl_wrapper .button {
    padding: 0;
 }
+
+#report {
+   position: fixed;
+   top: 20px;
+   width: 50%;
+   left: 50%;
+   transform: translateX(-50%);
+}
+
+#report input {
+   position: absolute;
+   top: 5px;
+   right: 5px;
+   background-color: white;
+}
+
+#report textarea {
+   height: 480px;
+   width: 640px;
+}
+
+#report-bg {
+   display: none;
+   top: 0px;
+   left: 0px;
+   height: 100vh;
+   width: 100vw;
+   position: fixed;
+   background-color: rgba(0, 0, 0, 0.5);
+}

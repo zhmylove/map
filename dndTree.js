@@ -29,8 +29,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
 // User variables
 // Paths are not meaningful for server.py due to GET/POST difference
-var LOAD_URL = "/test/map/get.php";
-var SAVE_URL = "/test/map/save.php";
+var LOAD_URL = "get.php";
+var SAVE_URL = "save.php";
 
 var PARENT_COLOR = "#00ff00";
 var NORMAL_COLOR = "#ffffff";
@@ -555,6 +555,9 @@ treeJSON = d3.json(LOAD_URL, function(error, treeData) {
             }
             update(d);
             break;
+         case 'report':
+            report(d);
+            break;
          default:
             if (d3.event.defaultPrevented) return; // click suppressed
             d = toggleChildren(d);
@@ -961,4 +964,29 @@ function loaded() {
    $("#model").val('');
    $("#show_hidden").prop('checked', show_hidden);
    $("#lock_drag").prop('checked', lock_drag);
+
+   $("#report-bg").on("click", function(ev) {
+      if (ev.target !== this) {
+         return;
+      }
+
+      $("#report-bg").hide();
+   });
+}
+
+function report(el) {
+   var get_children = function(d, depth) {
+      var rc = "\t".repeat(depth) + d.name + "\n";
+
+      if (d.children && d.children.length > 0) {
+         d.children.forEach(function(el){
+            rc = rc + get_children(el, depth + 1);
+         });
+      }
+
+      return rc;
+   }
+
+   $("#report-txt").val(get_children(el, 0));
+   $("#report-bg").show();
 }
